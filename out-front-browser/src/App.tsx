@@ -5,21 +5,29 @@ import { Button } from 'antd';
 import blocknativeSdk from 'bnc-sdk';
 import * as Web3 from 'web3';
 
+import LandingPage from './components/LandingPage';
 
-// import LandingPage from './components/LandingPage';
+interface IAppState {
+  web3?: any;
+  bnClient?: any
+}
 
-class App extends Component {
+class App extends Component<{}, IAppState> {
   // Web3
   web3?: any;
-  bnClinet: any
+
   constructor(props: any) {
     super(props);
-    this.blocknativeClicked = this.blocknativeClicked.bind(this);
+    this.state = {}
+    this.initBlocknative = this.initBlocknative.bind(this);
 
-    // this.connectToMetamask();
   }
 
-  async blocknativeClicked() {
+  componentDidMount() {
+    this.initBlocknative()
+  }
+
+  async initBlocknative() {
     const bnKey = process.env.REACT_APP_BLOCKNATIVE_API_KEY || ''
     const main = 1;
     const ropsten = 3;
@@ -33,8 +41,11 @@ class App extends Component {
       // onboard visitors
 
       // initialize and connect to the api
-      const blocknative = blocknativeSdk(options)
+      const blocknative = await blocknativeSdk(options)
       console.log('blocknative: ', blocknative)
+      this.setState(() => ({
+        bnClient: blocknative
+      }))
     } catch (error) {
       // user exited onboarding before completion
       console.log(error.msg);
@@ -99,21 +110,15 @@ class App extends Component {
       <div className="App">
         <header className="App-header">
           <div className="logo" />
-          {/* <LandingPage
+          <LandingPage
             web3={this.web3}
-            sendRoyaltyDistribution={this.sendRoyaltyDistribution}
-            getUserPastEvents={this.getUserPastEvents}
-            getBounties={this.getBounties}
-            acceptFufillment={this.acceptFulfillment}
-            getBounty={this.getBounty}
-            submitBounty={this.submitBounty}
-            kickoffBlocknative={this.blocknativeClicked}
-          /> */}
+            bnClient={this.state.bnClient}
+          />
 
           {/* for debugging  */}
-          <Button type="primary" onClick={this.blocknativeClicked}>
+          {/* <Button type="primary" onClick={this.initBlocknative}>
             Login with Blocknative
-          </Button>
+          </Button> */}
 
         </header>
       </div>

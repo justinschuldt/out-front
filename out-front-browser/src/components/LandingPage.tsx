@@ -7,6 +7,7 @@ import InputPage from './InputPage';
 
 interface ILandingPageProps {
   web3: any;
+  bnClient: any;
 }
 class LandingPage extends Component<ILandingPageProps> {
   constructor(props: ILandingPageProps) {
@@ -17,13 +18,11 @@ class LandingPage extends Component<ILandingPageProps> {
       <div className="landing-page">
         <Router>
           <>
-            <Route exact path="/" component={InputPage} />
-            <Route
-              path="/bounty/:id"
+            <Route exact path="/"
               render={routerProps => (
                 <InputPage
-                  web3={this.props.web3}
                   match={routerProps.match}
+                  {...this.props}
                 />
               )}
             />
@@ -31,7 +30,7 @@ class LandingPage extends Component<ILandingPageProps> {
               path="/admin"
               render={routerProps => (
                 <AdminPage
-                  web3={this.props.web3}
+                  {...this.props}
                 />
               )}
             />
