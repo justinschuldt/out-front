@@ -25,6 +25,7 @@ class App extends Component<{}, IAppState> {
 
   componentDidMount() {
     this.initBlocknative()
+    this.connectToMetamask()
   }
 
   async initBlocknative() {
@@ -75,11 +76,12 @@ class App extends Component<{}, IAppState> {
         // Request account access if needed
         // @ts-ignore
         await ethereum.enable();
+        console.log('ethereum enabled')
         // Acccounts now exposed
         // @ts-ignore
-        web3.eth.sendTransaction({
-          /* ... */
-        });
+        // web3.eth.sendTransaction({
+        //   /* ... */
+        // });
       } catch (error) {
         // User denied account access...
       }

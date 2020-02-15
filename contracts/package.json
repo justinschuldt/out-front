@@ -1,0 +1,22 @@
+{
+    "name": "contracts",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "Apache-2.0",
+    "scripts": {
+        "build": "solc --evm-version istanbul --overwrite -o ./build --pretty-json --abi --bin --bin-runtime ./src/**.sol",
+        "test": "mocha -t 10000 ./test/**.js",
+        "migrate": "node ./lib/migrate.js"
+    },
+    "devDependencies": {
+        "bignumber.js": "^9.0.0",
+        "chai": "^4.2.0",
+        "chai-as-promised": "^7.1.1",
+        "ethereumjs-util": "^6.2.0",
+        "flex-contract": "^2.0.3",
+        "ganache-core": "^2.10.2",
+        "lodash": "^4.17.15",
+        "mocha": "^7.0.1",
+        "solc": "^0.6.2"
+    }
+}
