@@ -1,2 +1,4 @@
-/out-front-browser/node_modules
+**/node_modules
+**/*.log
 /out-front-browser/.env
+/secrets.json
