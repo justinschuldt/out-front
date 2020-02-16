@@ -27,6 +27,7 @@ const DEPLOYER = SECRETS.accounts.deployer;
 const USER = SECRETS.accounts.user;
 const NETWORK = process.env.NETWORK || 'ropsten';
 const MAX_UINT256 = new BigNumber(2).pow(256).minus(1).toString(10);
+const GAS_PRICE = process.env.GAS_PRICE || undefined;
 
 (async () => {
     const addresses = {};
@@ -34,13 +35,13 @@ const MAX_UINT256 = new BigNumber(2).pow(256).minus(1).toString(10);
 
     const siphon = new FlexContract(SIPHON_ABI, { network: NETWORK, bytecode: `0x${SIPHON_BYTECODE}` });
     console.log('Deploying Siphon...');
-    await siphon.new().send({ key: DEPLOYER.privateKey });
+    await siphon.new().send({ key: DEPLOYER.privateKey, gasPrice: GAS_PRICE });
     console.log(`Deployed Siphon at ${siphon.address}`);
     addresses['Siphon'] = siphon.address;
 
     const dapp = new FlexContract(CRAP_DAPP_ABI, { network: NETWORK, bytecode: `0x${CRAP_DAPP_BYTECODE}` });
     console.log('Deploying CrapDapp...');
-    await dapp.new().send({ key: DEPLOYER.privateKey });
+    await dapp.new().send({ key: DEPLOYER.privateKey, gasPrice: GAS_PRICE });
     console.log(`Deployed CrapDapp at ${dapp.address}`);
     addresses['CrapDapp'] = dapp.address;
 

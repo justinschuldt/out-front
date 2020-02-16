@@ -13,7 +13,7 @@ module.exports = {
     dapp: DEPLOYMENTS[NETWORK].CrapDapp,
     token: NETWORK !== 'main'
         ? DEPLOYMENTS[NETWORK].TronToken
-        : process.env.USER_TOKEN,
+        : process.env.MAINNET_USER_TOKEN,
     gasBonus: 1.25,
     providerURI: NETWORK !== 'main'
         ? process.env.TESTNET_PROVIDER

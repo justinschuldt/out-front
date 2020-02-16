@@ -5,5 +5,9 @@
         "TokenBalanceCheckCallWrapper": "0x9E0fDEB7627C8eE0e31c6076f4680e5bE53Ee847",
         "TestBalanceChanger": "0x5A6b84eE71a9aeEb01e0F756e664b730e7AbB9E1",
         "CrapDapp": "0xBa00994bB49deB649B869dA007F58f5Fa656d3d6"
+    },
+    "main": {
+        "Siphon": "0xCF30A6137175F035ED262d45dE69C7f114c4c15a",
+        "CrapDapp": "0xF9537cE82d214D23BE0403D772F0EB081F0699Fb"
     }
 }
