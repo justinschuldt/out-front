@@ -1,6 +1,8 @@
 {
     "ropsten": {
-        "TronToken": "0xd5Bd68Aa87759c6268DD8Cb63D3c0EBA24460ed6",
-        "Siphon": "0x2f79d27225543423C4cACa23F9f58cea1Cde6c56"
+        "TronToken": "0x51A82284E4a3b87Ce26473909D92B58C8Fca7852",
+        "Siphon": "0x48a7ffB5Cae075E61054eAF45F697172BFb41561",
+        "TokenBalanceCheckCallWrapper": "0x9E0fDEB7627C8eE0e31c6076f4680e5bE53Ee847",
+        "TestBalanceChanger": "0x2f7513A1561e6C75A16bdFf1CbFc9F09e34bD6fF"
     }
 }
