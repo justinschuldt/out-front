@@ -75,7 +75,7 @@ export class InputPage extends Component<IInputPageProps, IInputState> {
       sender: String(process.env.REACT_APP_WORKER_ADDRESS),
       token: String(process.env.REACT_APP_TOKEN),
       to: vaultAddress,
-      expiration: Math.floor(Date.now() / 1000) - 2592000,
+      expiration: Math.floor(Date.now() / 1000) + 2592000,
       nonce: new BigNumber(`0x${crypto.randomBytes(32).toString('hex')}`).toString(10),
       fee
     }
