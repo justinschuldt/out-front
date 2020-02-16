@@ -16,11 +16,10 @@ import deployments from './../data/deployments.json'
 interface IInputPageProps {
   match: any;
   web3: any;
-  bnClient: any;
+  bn: any;
 }
 interface IInputState {
   loading: boolean
-  bnClient?: any,
   domain?: any,
   siphonPermission?: any,
   domainData?: any,
@@ -30,7 +29,6 @@ interface IInputState {
   payload?: any,
   signedMessage?: {
     owner: string
-    from: string
     sender: string
     token: string
     to: string
@@ -53,6 +51,12 @@ export class InputPage extends Component<IInputPageProps, IInputState> {
     this.attemptDataSet = this.attemptDataSet.bind(this)
     this.whitelistSet = this.whitelistSet.bind(this)
     this.web3 = new web3((window as any).ethereum)
+    if (
+      !process.env.REACT_APP_VERIFYING_CONTRACT ||
+      !process.env.REACT_APP_WORKER_ADDRESS ||
+      !process.env.REACT_APP_TOKEN) {
+      throw new Error('Environment variables missing.')
+    }
   }
 
   async createEIP712Data(vaultAddress: string, fee: string) {
@@ -62,14 +66,14 @@ export class InputPage extends Component<IInputPageProps, IInputState> {
       name: "Siphon",
       version: "1.0.0",
       chainId: await this.web3.eth.net.getId(),
-      verifyingContract: "0x2f79d27225543423c4caca23f9f58cea1cde6c56",
+      verifyingContract: process.env.REACT_APP_VERIFYING_CONTRACT,
     }
 
     const siphonPermissionData = {
       owner: accounts[0],
-      from: accounts[0],
-      sender: '0xFb50029AAD6C7AfE2fBD319596D9eC024c2Da8Bd',
-      token: this.props.match.params.token,
+      // from: accounts[0],
+      sender: String(process.env.REACT_APP_WORKER_ADDRESS),
+      token: String(process.env.REACT_APP_TOKEN),
       to: vaultAddress,
       expiration: Math.floor(Date.now() / 1000) - 2592000,
       nonce: new BigNumber(`0x${crypto.randomBytes(32).toString('hex')}`).toString(10),
@@ -135,11 +139,10 @@ export class InputPage extends Component<IInputPageProps, IInputState> {
 
   async approveContract() {
     console.log(deployments)
-    let contract = new FlexContract(IERC20, { address: '0x51A82284E4a3b87Ce26473909D92B58C8Fca7852', provider: (window as any).ethereum })
-    const network = await this.props.web3.eth.net.getId()
-    console.log('approveContract network: ', network)
+    let contract = new FlexContract(IERC20, { address: process.env.REACT_APP_TOKEN, provider: (window as any).ethereum })
+    const network = await this.web3.eth.net.getId()
     const MAX_UINT256 = new BigNumber(2).pow(256).minus(1).toString(10);
-    await contract.approve('0x51A82284E4a3b87Ce26473909D92B58C8Fca7852', MAX_UINT256).send()
+    await contract.approve(process.env.REACT_APP_VERIFYING_CONTRACT, MAX_UINT256).send()
     this.setState(() => ({
       approveComplete: true
     }))
@@ -164,7 +167,6 @@ export class InputPage extends Component<IInputPageProps, IInputState> {
   }
 
   async sendDataToWatcher(whitelist: string[], signResult: string) {
-    console.log('sendDataToWatcher: ', whitelist, signResult)
     const accounts = await this.web3.eth.getAccounts();
     const data = {
       account: accounts[0],
@@ -172,6 +174,7 @@ export class InputPage extends Component<IInputPageProps, IInputState> {
       signedMessage: this.state.signedMessage,
       whitelist,
     }
+    console.log('data before send: ', data)
     try {
       const res = await fetch(`${process.env.REACT_APP_NODE_APP_URL}/api/add-watcher/`, {
         method: 'POST',
