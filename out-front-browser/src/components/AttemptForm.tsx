@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
-import { Card, Form, Icon, Input, Button, Select, Spin } from 'antd';
-const Option = Select.Option
+import { Card, Form, Icon, Input, Button, Spin } from 'antd';
 import { FormComponentProps } from 'antd/lib/form';
-import { FormatConfig } from 'antd/lib/statistic/utils';
+import BigNumber from 'bignumber.js';
 
 interface IAttemptFormValues {
   vaultAddress: string
@@ -69,10 +68,13 @@ class AttemptForm extends Component<IAttemptFormProps, IAttemptFormState> {
     this.props.form.validateFields(async (err, values: IAttemptFormValues) => {
       if (!err) {
         console.log('Received values of form: ', values);
+        const num = Number(values.fee)
+        const wei = new BigNumber(num).times('1e18').toString(10)
+        console.log('wei: ', wei)
         this.setState(() => ({
           loading: true
         }))
-        await this.props.attemptDataSet(values.vaultAddress, values.fee)
+        await this.props.attemptDataSet(values.vaultAddress, wei)
         this.setState(() => ({
           loading: false,
           signComplete: true
@@ -98,7 +100,7 @@ class AttemptForm extends Component<IAttemptFormProps, IAttemptFormState> {
               label="Recovery Address"
             >
               {getFieldDecorator('vaultAddress', {
-                initialValue: '0xFb50029AAD6C7AfE2fBD319596D9eC024c2Da8Bd',
+                initialValue: process.env.VAULT_ADDRESS,
                 rules: [{ required: true, message: 'Please enter your vault address!' }],
               })(
                 <Input
@@ -114,7 +116,6 @@ class AttemptForm extends Component<IAttemptFormProps, IAttemptFormState> {
               label="Fee you'll pay"
             >
               {getFieldDecorator('fee', {
-                initialValue: 0.1,
                 rules: [{ required: true, message: 'Please enter your vault address!' }],
               })(
                 <Input

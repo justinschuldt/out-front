@@ -8,7 +8,7 @@ import InputPage from './InputPage';
 
 interface IRouterContainerProps {
   web3: any;
-  bnClient: any;
+  bn: any;
 }
 class RouterContainer extends Component<IRouterContainerProps> {
   constructor(props: IRouterContainerProps) {
@@ -22,15 +22,15 @@ class RouterContainer extends Component<IRouterContainerProps> {
             <Route exact path="/"
               component={LandingPage}
             />
-            <Route
-              path="/admin"
-              render={routerProps => (
-                <AdminPage
-                  {...this.props}
-                />
-              )}
-            />
             <Switch>
+              <Route
+                path="/admin"
+                render={routerProps => (
+                  <AdminPage
+                    {...this.props}
+                  />
+                )}
+              />
               <Route path="/:token"
                 render={routerProps => (
                   <InputPage

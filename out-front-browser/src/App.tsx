@@ -7,57 +7,32 @@ import RouterContainer from './components/RouterContainer';
 
 interface IAppState {
   web3?: any;
-  bnClient?: any
+  bn?: any
 }
 
 class App extends Component<{}, IAppState> {
-  // Web3
   web3?: any;
 
   constructor(props: any) {
     super(props);
     this.state = {}
     this.initBlocknative = this.initBlocknative.bind(this);
-    this.test = this.test.bind(this);
+    console.log('process.env: ', process.env)
   }
 
-  componentDidMount() {
-    this.initBlocknative()
-    this.connectToMetamask()
-  }
-
-  async test() {
-    const data = { username: 'example' };
-    fetch('http://localhost:5000/api/add-watcher/', {
-      method: 'POST', // or 'PUT'
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log('Success:', data);
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      })
-    // console.log(deployments)
-    // let contract = new FlexContract(IERC20, {address: '0x51A82284E4a3b87Ce26473909D92B58C8Fca7852', provider: ( window as any ).ethereum})
-    // const MAX_UINT256 = new BigNumber(2).pow(256).minus(1).toString(10);
-    // await contract.approve('0x51A82284E4a3b87Ce26473909D92B58C8Fca7852', MAX_UINT256).send()
-    // console.log('test', contract)
+  async componentDidMount() {
+    await this.connectToMetamask()
+    // this.initBlocknative()
   }
 
   async initBlocknative() {
-    const bnKey = process.env.REACT_APP_BLOCKNATIVE_API_KEY || ''
-    const main = 1;
-    const ropsten = 3;
-    const rinkeby = 4;
+    const bnKey = String(process.env.REACT_APP_BLOCKNATIVE_API_KEY)
+    const network = await this.web3.eth.net.getId()
+
     const options = {
       dappId: bnKey,
-      networkId: ropsten,
-      transactionHandlers: [(event: any) => console.log(event.transaction)],
+      networkId: network,
+      // transactionHandlers: [(event: any) => console.log(event.transaction)],
     }
     try {
       // onboard visitors
@@ -66,7 +41,7 @@ class App extends Component<{}, IAppState> {
       const blocknative = await blocknativeSdk(options)
       console.log('blocknative: ', blocknative)
       this.setState(() => ({
-        bnClient: blocknative
+        bn: blocknative
       }))
     } catch (error) {
       // user exited onboarding before completion
@@ -80,7 +55,7 @@ class App extends Component<{}, IAppState> {
       console.log('web3 available');
       // @ts-ignore
       this.BN = web3.utils.BN;
-      web3.eth.getAccounts((error: any, accounts: any) => {
+      await web3.eth.getAccounts((error: any, accounts: any) => {
         console.log(accounts);
       });
 
@@ -92,17 +67,12 @@ class App extends Component<{}, IAppState> {
     // @ts-ignore
     if (window.ethereum) {
       // @ts-ignore
-      this.setWeb3(new Web3(ethereum));
+      await this.setWeb3(new Web3(ethereum));
       try {
         // Request account access if needed
         // @ts-ignore
         await ethereum.enable();
         console.log('ethereum enabled')
-        // Acccounts now exposed
-        // @ts-ignore
-        // web3.eth.sendTransaction({
-        //   /* ... */
-        // });
       } catch (error) {
         // User denied account access...
       }
@@ -111,12 +81,8 @@ class App extends Component<{}, IAppState> {
     // @ts-ignore
     else if (window.web3) {
       // @ts-ignore
-      this.setWeb3(new Web3(web3.currentProvider));
-      // Acccounts always exposed
-      // @ts-ignore
-      web3.eth.sendTransaction({
-        /* ... */
-      });
+      await this.setWeb3(new Web3(web3.currentProvider));
+
     }
     // Non-dapp browsers...
     else {
@@ -135,14 +101,8 @@ class App extends Component<{}, IAppState> {
           <div className="logo" />
           <RouterContainer
             web3={this.web3}
-            bnClient={this.state.bnClient}
+            bn={this.state.bn}
           />
-
-          {/* for debugging 
-          <Button type="primary" onClick={this.test}>
-            Login with Blocknative <Icon type="right" />
-          </Button> */}
-
         </header>
       </div>
     );
