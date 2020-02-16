@@ -2,8 +2,9 @@
 
 require('dotenv').config()
 const express = require('express')
+const bodyParser = require('body-parser')
 const blocknativeSdk = require('bnc-sdk')
-const WebSocket = require('ws') 
+const WebSocket = require('ws')
 
 // Express
 const port = 5000
@@ -30,6 +31,7 @@ router.options('/*', function (req, res, next) {
   )
   res.sendStatus(200)
 })
+router.use(bodyParser.json())
 
 
 router.post('/add-watcher/', (req, res) => {
