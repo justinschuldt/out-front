@@ -2,19 +2,42 @@
 
 require('dotenv').config()
 const express = require('express')
-const app = express()
 const blocknativeSdk = require('bnc-sdk')
 const WebSocket = require('ws') 
 
 // Express
 const port = 5000
 
-app.get('/', (req, res) => res.send('Hello World!'))
+const app = express()
+const router = express.Router()
 
-app.post('/api/add-watcher/', (req, res) => {
+// enable CORS
+router.use(function (req, res, next) {
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept'
+  )
+  next()
+})
+// options requests
+router.options('/*', function (req, res, next) {
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, Content-Length, X-Requested-With'
+  )
+  res.sendStatus(200)
+})
+
+
+router.post('/add-watcher/', (req, res) => {
   console.log('add-watcher req.body: ', req.body)
   res.status(200)
 })
+
+app.use('/api', router)
 
 app.listen(port, () => console.log(`express app listening on port ${port}!`))
 
