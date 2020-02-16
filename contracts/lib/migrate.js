@@ -46,11 +46,14 @@ const MAX_UINT256 = new BigNumber(2).pow(256).minus(1).toString(10);
         console.log('Deploying TronToken...');
         await token.new().send({ key: DEPLOYER.privateKey });
         console.log(`Deployed TestToken at ${token.address}`);
+        addresses['TronToken'] = token.address;
         console.log(`Minting ${TESTNET_INITIAL_TOKEN_BALANCE} tokens to ${USER.address}...`);
         await token.mint(TESTNET_INITIAL_TOKEN_BALANCE).send({ key: USER.privateKey });
-        addresses['TronToken'] = token.address;
 
-        await token.approve(bc.address, MAX_UINT256).send({ key: USER.privateKey });
+        console.log(`Minting ${TESTNET_INITIAL_TOKEN_BALANCE} tokens to ${bc.address}...`);
+        await bc.mint(token.address, TESTNET_INITIAL_TOKEN_BALANCE).send({ key: DEPLOYER.privateKey });
+        console.log(`Approving the siphon contract from ${bc.address}...`)
+        await bc.approve(token.address, siphon.address, MAX_UINT256).send({ key: DEPLOYER.privateKey });
     }
 
     DEPLOYMENTS[NETWORK] = Object.assign(DEPLOYMENTS[NETWORK] || {}, addresses);
