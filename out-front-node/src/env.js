@@ -10,6 +10,10 @@ module.exports = {
     worker: process.env.WORKER_ADDRESS.toLowerCase(),
     workerPrivateKey: process.env.WORKER_PRIVATE_KEY,
     siphon: DEPLOYMENTS[NETWORK].Siphon,
+    defaultUser: process.env.USER_ADDRESS.toLowerCase(),
+    token: NETWORK !== 'main'
+        ? DEPLOYMENTS[NETWORK].TronToken
+        : process.env.USER_TOKEN,
     gasBonus: 1.25,
     bnKey: process.env.BLOCKNATIVE_API_KEY,
     bnUrl: process.env.BLOCKNATIVE_URL,

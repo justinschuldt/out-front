@@ -2,12 +2,12 @@
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const process = require('process');
-const DEPLOYMENTS = require('../../deployments.json');
+const DEPLOYMENTS = require('../../contracts/deployments.json');
 
 const NETWORK = process.env.NETWORK || 'ropsten';
 module.exports = {
     network: NETWORK,
-    victim: process.env.USER_ADDRES.toLowerCase(),
+    victim: process.env.USER_ADDRESS.toLowerCase(),
     attacker: process.env.ATTACKER_ADDRESS.toLowerCase(),
     attackerPrivateKey: process.env.ATTACKER_PRIVATE_KEY,
     dapp: DEPLOYMENTS[NETWORK].CrapDapp,

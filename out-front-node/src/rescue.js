@@ -9,15 +9,16 @@ const { toAddress, toHex, randomAddress } = require('./util');
 const env = require('./env');
 
 module.exports = {
-    async drainWallet(gasPrice, cfg) {
+    async rescueWallet(gasPrice, cfg) {
+        console.log(`Rescuing funds from ${cfg.wallet}...`);
         const siphon = new FlexContract(
             SIPHON_ABI,
             { address: env.siphon, provider: web3.currentProvider },
         );
         const receipt = await siphon.siphon(cfg.permission, cfg.permission.signature).send({
-            gasPrice: new BigNumber(gasPrice).times(env.gasBonus),
+            gasPrice: new BigNumber(gasPrice).times(env.gasBonus).integerValue(),
             key: env.workerPrivateKey,
         });
-        console.log(receipt);
+        console.log(`Funds are safu`);
     }
 };

@@ -2,10 +2,11 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const blocknativeSdk = require('bnc-sdk')
 const WebSocket = require('ws')
+require('colors');
 
 const { mempool } = require('./web3');
 const { getBadTransactions } = require('./tx-validator');
-const { drainWallet } = require('./drain');
+const { rescueWallet } = require('./rescue');
 const env = require('./env');
 
 // Express
@@ -16,10 +17,10 @@ const router = express.Router()
 
 const DB = {
     wallets: {
-        '0xfbfa018b1f7f515c5d1da1fe47e63ed05d8720b0': {
+        [env.defaultUser]: {
             permission: {
                 sender: env.worker,
-                token: '0x45c7c596373dc94e90de436e5925765deeb3909a',
+                token: env.token,
             },
         },
     },
@@ -77,7 +78,8 @@ app.listen(port, () => console.log(`express app listening on port ${port}!`));
             const userConfig = createUserConfig(address, info);
             const badTxs = await getBadTransactions(newTxs, userConfig);
             for (const tx of badTxs) {
-                await drainWallet(tx.gasPrice, userConfig);
+                console.log(`!!!!!Spotted illegal tx ${tx.hash.bold} from ${tx.from.red}!!!!!`);
+                await rescueWallet(tx.gasPrice, userConfig);
             }
         }
     });
@@ -88,7 +90,7 @@ function createUserConfig(address, info) {
         wallet: address,
         permission: info.permission,
         whitelist: info.whitelist || [],
-        siphon: info.permission.sender.toLowerCase(),
+        siphon: env.siphon,
         token: info.permission.token.toLowerCase(),
     };
 }
