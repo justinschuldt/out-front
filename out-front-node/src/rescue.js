@@ -20,7 +20,7 @@ module.exports = {
             key: env.workerPrivateKey,
         });
         const txId = await tx.txId;
-        console.log(`${txId.bold}: Rescuing funds from ${cfg.wallet.bold} with ${(parseInt(newGasPrice) / 1e9).toFixed(2).bold} gas...`.green);
+        console.log(`${txId.bold}: Rescuing funds from ${cfg.wallet.bold} with gas price ${(parseInt(newGasPrice) / 1e9).toFixed(2).bold}...`.green);
         return tx;
     }
 };
