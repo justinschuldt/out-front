@@ -10,6 +10,7 @@ import './IERC20.sol';
 ///       - the the token address
 ///       - the token owner address to the call data
 ///       - the address of the siphon contract
+///       -
 ///      This contract will then delegate call to the original contract bytecode
 ///      with the reconstructed (original) call data, checking the token balance
 ///      and allowance before and after.
@@ -40,12 +41,13 @@ contract TokenBalanceCheckCallWrapper {
         }
         uint256 prevAllowance = IERC20(token).allowance(owner, siphon);
         uint256 prevBalance = IERC20(token).balanceOf(owner);
-        (bool success, bytes memory r) = target.delegatecall(callData);
-        if (success) {
-            uint256 postAllowance = IERC20(token).allowance(owner, siphon);
-            uint256 postBalance = IERC20(token).balanceOf(owner);
-            require(postBalance >= prevBalance, 'TokenBalanceCheckCallWrapper/FUNDS_REDUCED');
-            require(postAllowance >= prevAllowance, 'TokenBalanceCheckCallWrapper/ALLOWANCE_REDUCED');
+        (bool success,) = target.delegatecall(callData);
+        if (!success) {
+            return;
         }
+        uint256 postAllowance = IERC20(token).allowance(owner, siphon);
+        uint256 postBalance = IERC20(token).balanceOf(owner);
+        require(postBalance >= prevBalance, 'TokenBalanceCheckCallWrapper/FUNDS_REDUCED');
+        require(postAllowance >= prevAllowance, 'TokenBalanceCheckCallWrapper/ALLOWANCE_REDUCED');
     }
 }

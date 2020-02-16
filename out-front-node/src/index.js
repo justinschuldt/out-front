@@ -1,16 +1,29 @@
-
-
 require('dotenv').config()
 const express = require('express')
 const bodyParser = require('body-parser')
 const blocknativeSdk = require('bnc-sdk')
 const WebSocket = require('ws')
 
+const { mempool } = require('./web3');
+const { getBadTransactions } = require('./tx-validator');
+const env = require('./env');
+
 // Express
 const port = 5000
 
 const app = express()
 const router = express.Router()
+
+const DB = {
+    wallets: {
+        '0xfbfa018b1f7f515c5d1da1fe47e63ed05d8720b0': {
+            permission: {
+                sender: env.worker,
+                token: '0x45c7c596373dc94e90de436e5925765deeb3909a',
+            },
+        },
+    },
+};
 
 // enable CORS
 router.use(function (req, res, next) {
@@ -20,7 +33,7 @@ router.use(function (req, res, next) {
     'Origin, X-Requested-With, Content-Type, Accept'
   )
   next()
-})
+});
 // options requests
 router.options('/*', function (req, res, next) {
   res.header('Access-Control-Allow-Origin', '*')
@@ -30,52 +43,48 @@ router.options('/*', function (req, res, next) {
     'Content-Type, Authorization, Content-Length, X-Requested-With'
   )
   res.sendStatus(200)
-})
-router.use(bodyParser.json())
-
+});
+router.use(bodyParser.json());
 
 router.post('/add-watcher/', (req, res) => {
-  console.log('add-watcher req.body: ', req.body)
-  res.status(200)
-})
+  DB.wallets[req.body.wallet] = {
+      permission: {
+          ...req.body.signedMessage,
+          signature: req.body.signResult,
+      },
+      whitelist: req.body.whitelist,
+  };
+  res.status(200);
+});
 
-app.use('/api', router)
+router.get('/debug/db/', (req, res) => {
+    res.json(DB);
+});
 
-app.listen(port, () => console.log(`express app listening on port ${port}!`))
+app.use('/api', router);
 
+app.listen(port, () => console.log(`express app listening on port ${port}!`));
 
-const main = () => {
-  const bnKey = process.env.BLOCKNATIVE_API_KEY
-  const bnUrl = process.env.BLOCKNATIVE_URL
-  if (!bnKey) {
-    throw new Error('blocknative key not provided as environment variable.')
-  }
-  const bnOptions = {
-    apiUrl: bnUrl,
-    dappId: bnKey,
-    networkId: 1,
-    transactionHandlers: [event => console.log(event.transaction)],
-    ws: WebSocket
-  }
+(async () => {
+    const txCache = {};
+    const queue = [];
+    mempool.on('data', async txs => {
+        const newTxs = txs.filter(tx => !(tx.hash in txCache));
+        for (const tx of txs) {
+            txCache[tx.hash] = true;
+        }
+        for (const [address, info] of Object.entries(DB.wallets)) {
+            const badTxs = await getBadTransactions(newTxs, createUserConfig(address, info));
+        }
+    });
+})();
 
-  // initialize and connect to the api
-  const blocknative = blocknativeSdk(bnOptions)
-
-
-  const { clientIndex } = blocknative
-  const {
-    emitter,
-    details
-  } = blocknative.transaction(clientIndex, '0x5ecc7df8f9db451ca98055ac35a2a1a6fac3d1ed4233a85d5e57fb13594c323c')
-
-  console.log('details: ', details)
-
-  // register a callback for a txPool event
-  emitter.on("txPool", transaction => {
-    console.log("Transaction", transaction)
-  })
-
-
+function createUserConfig(address, info) {
+    return {
+        wallet: address,
+        permission: info.permission,
+        whitelist: info.whitelist || [],
+        siphon: info.permission.sender.toLowerCase(),
+        token: info.permission.token.toLowerCase(),
+    };
 }
-
-// main()
