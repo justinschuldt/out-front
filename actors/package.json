@@ -5,7 +5,8 @@
     "license": "Apache-2.0",
     "private": true,
     "scripts": {
-        "attack": "node ./src/attack-dapp.js"
+        "attack": "node ./src/attack-dapp.js",
+        "reset": "node ./src/reset.js"
     },
     "dependencies": {
         "bignumber.js": "^9.0.0",

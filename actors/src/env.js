@@ -8,6 +8,9 @@ const NETWORK = process.env.NETWORK || 'ropsten';
 module.exports = {
     network: NETWORK,
     victim: process.env.USER_ADDRESS.toLowerCase(),
+    victimPrivateKey: process.env.USER_PRIVATE_KEY.toLowerCase(),
+    vault: process.env.VAULT_ADDRESS.toLowerCase(),
+    vaultPrivateKey: process.env.VAULT_PRIVATE_KEY,
     attacker: process.env.ATTACKER_ADDRESS.toLowerCase(),
     attackerPrivateKey: process.env.ATTACKER_PRIVATE_KEY,
     dapp: DEPLOYMENTS[NETWORK].CrapDapp,
