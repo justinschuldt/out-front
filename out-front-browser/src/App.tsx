@@ -1,14 +1,9 @@
 import React, { Component } from 'react';
 import './App.less';
 
-import { Button } from 'antd';
 import blocknativeSdk from 'bnc-sdk';
 import * as Web3 from 'web3';
-const FlexContract = require('flex-contract');
-import LandingPage from './components/LandingPage';
-import IERC20 from './data/IERC20.json'
-import deployments from './data/deployments.json'
-const BigNumber = require('bignumber.js');
+import RouterContainer from './components/RouterContainer';
 
 interface IAppState {
   web3?: any;
@@ -31,7 +26,7 @@ class App extends Component<{}, IAppState> {
     this.connectToMetamask()
   }
 
-  async test () {
+  async test() {
     const data = { username: 'example' };
     fetch('http://localhost:5000/api/add-watcher/', {
       method: 'POST', // or 'PUT'
@@ -40,13 +35,13 @@ class App extends Component<{}, IAppState> {
       },
       body: JSON.stringify(data),
     })
-    .then((response) => response.json())
-    .then((data) => {
-      console.log('Success:', data);
-    })
-    .catch((error) => {
-      console.error('Error:', error);
-    }) 
+      .then((response) => response.json())
+      .then((data) => {
+        console.log('Success:', data);
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      })
     // console.log(deployments)
     // let contract = new FlexContract(IERC20, {address: '0x51A82284E4a3b87Ce26473909D92B58C8Fca7852', provider: ( window as any ).ethereum})
     // const MAX_UINT256 = new BigNumber(2).pow(256).minus(1).toString(10);
@@ -138,15 +133,15 @@ class App extends Component<{}, IAppState> {
       <div className="App">
         <header className="App-header">
           <div className="logo" />
-          <LandingPage
+          <RouterContainer
             web3={this.web3}
             bnClient={this.state.bnClient}
           />
 
-          {/* for debugging  */}
+          {/* for debugging 
           <Button type="primary" onClick={this.test}>
-            Login with Blocknative
-          </Button> 
+            Login with Blocknative <Icon type="right" />
+          </Button> */}
 
         </header>
       </div>

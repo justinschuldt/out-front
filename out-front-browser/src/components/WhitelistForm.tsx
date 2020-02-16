@@ -1,15 +1,38 @@
 import React, { Component } from 'react';
 import { Card, Form, Icon, Input, Button } from 'antd';
 import { FormComponentProps } from 'antd/lib/form';
+import {
+  // formItemLayout,
+  formItemLayoutWithOutLabel
+} from './AttemptForm';
 
 
 interface IWhitelistFormProps extends FormComponentProps {
-  whitelistSet: (whitelist: string[]) => void
+  whitelistSet: (whitelist: string[]) => Promise<void>
 }
 interface FormValues {
   keys: number[]
   names: string[]
 }
+
+const formItemLayout = {
+  labelCol: {
+    xs: { span: 24 },
+    sm: { span: 24 },
+    md: { span: 24 },
+    lg: { span: 24 },
+    xl: { span: 24 },
+    xxl: { span: 24 },
+  },
+  wrapperCol: {
+    xs: { span: 24 },
+    sm: { span: 22 },
+    md: { span: 20, offset: 1 },
+    lg: { span: 18, offset: 2 },
+    xl: { span: 16, offset: 3 },
+    xxl: { span: 14, offset: 4 },
+  },
+};
 
 class WhitelistForm extends Component<IWhitelistFormProps, {}> {
   id: number
@@ -65,62 +88,51 @@ class WhitelistForm extends Component<IWhitelistFormProps, {}> {
   }
   render() {
     const { getFieldDecorator, getFieldValue } = this.props.form;
-    const formItemLayout = {
-      labelCol: {
-        xs: { span: 24 },
-        sm: { span: 4 },
-      },
-      wrapperCol: {
-        xs: { span: 24 },
-        sm: { span: 20 },
-      },
-    };
-    const formItemLayoutWithOutLabel = {
-      wrapperCol: {
-        xs: { span: 24, offset: 0 },
-        sm: { span: 20, offset: 4 },
-      },
-    };
     getFieldDecorator('keys', { initialValue: [] });
     const keys = getFieldValue('keys');
     const formItems = keys.map((k: number, index: number) => (
       <Form.Item
-        {...(index === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
+        {...formItemLayout}
         label={index === 0 ? 'Addresses' : ''}
         required={false}
         key={k}
       >
-        {getFieldDecorator(`names[${k}]`, {
-          validateTrigger: ['onChange', 'onBlur'],
-          rules: [
-            {
-              required: true,
-              whitespace: true,
-              message: "Please enter an address you'd like to whitelist.",
-            },
-          ],
-        })(<Input placeholder="Address" style={{ width: '90%', marginRight: 8 }} />)}
-        {keys.length > 1 ? (
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          {getFieldDecorator(`names[${k}]`, {
+            validateTrigger: ['onChange', 'onBlur'],
+            rules: [
+              {
+                required: true,
+                whitespace: true,
+                message: "Please enter an address you'd like to whitelist.",
+              },
+            ],
+          })(<Input placeholder="Address" />)}
           <Icon
             className="dynamic-delete-button"
             type="minus-circle-o"
             onClick={() => this.remove(k)}
+            style={{ marginLeft: '1em', marginTop: '0.5em' }}
           />
-        ) : null}
+
+        </div>
       </Form.Item>
     ));
     return (
-      <Card title="Add to whitelist" bordered={false} style={{ width: '80%' }}>
-        <p>Address Whitelist</p>
+      <Card title="Optional - Whitelist Address" style={{ marginBottom: '1em' }}>
         <Form onSubmit={this.createWhitelist} >
           {formItems}
-          <Form.Item {...formItemLayoutWithOutLabel}>
-            <Button type="dashed" onClick={this.add} style={{ width: '90%' }}>
+          <Form.Item {...formItemLayout}>
+            <Button type="dashed" onClick={this.add} style={{ width: '100%' }}>
               <Icon type="plus" /> Add field
             </Button>
           </Form.Item>
-          <Form.Item {...formItemLayoutWithOutLabel} style={{ width: '100%' }}>
-            <Button type="primary" htmlType="submit">
+          <Form.Item {...formItemLayoutWithOutLabel} >
+            <Button
+              type="primary"
+              htmlType="submit"
+              style={{ width: '100%' }}
+            >
               Submit
             </Button>
           </Form.Item>
@@ -131,5 +143,5 @@ class WhitelistForm extends Component<IWhitelistFormProps, {}> {
 }
 
 
-const WrappedWhitelistForm = Form.create({ name: 'whitelist_form' })(WhitelistForm)
+const WrappedWhitelistForm = Form.create<IWhitelistFormProps>({ name: 'whitelist_form' })(WhitelistForm)
 export default WrappedWhitelistForm;

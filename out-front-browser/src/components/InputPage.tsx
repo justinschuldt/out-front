@@ -1,14 +1,19 @@
 import React, { Component } from 'react';
-import { Card, Form, Icon, Input, Button, Select, Spin } from 'antd';
-const Option = Select.Option
-import { FormComponentProps } from 'antd/lib/form';
+import { Card, Button, Icon, Form, Timeline } from 'antd';
 import crypto from 'crypto';
 import BigNumber from 'bignumber.js';
 import * as util from 'util'
 import web3 from 'web3';
+import AttemptForm from './AttemptForm'
 import WhitelistForm from './WhitelistForm'
+import { Link } from "react-router-dom";
+import { formItemLayoutWithOutLabel } from './AttemptForm'
 
-interface IInputPageProps extends FormComponentProps {
+const FlexContract = require('flex-contract');
+import IERC20 from './../data/IERC20.json'
+import deployments from './../data/deployments.json'
+
+interface IInputPageProps {
   match: any;
   web3: any;
   bnClient: any;
@@ -21,44 +26,34 @@ interface IInputState {
   domainData?: any,
   siphonPermissionData?: any,
   types?: any
+  approveComplete?: boolean
   payload?: any,
+  signedMessage?: {
+    owner: string
+    from: string
+    sender: string
+    token: string
+    to: string
+    expiration: number
+    nonce: string
+    fee: string
+  }
   signResult?: string
   whitelist?: string[]
 }
-interface IFormValues {
-  vaultAddress: string
-  fee: string
-  token: string
-}
-
-const formItemLayout = {
-  labelCol: {
-    xs: { span: 24 },
-    sm: { span: 8 },
-  },
-  wrapperCol: {
-    xs: { span: 24 },
-    sm: { span: 16 },
-  },
-};
-
-const hasErrors = (fieldsError: any) => {
-  return Object.keys(fieldsError).some((field: any) => fieldsError[field]);
-}
-
 
 export class InputPage extends Component<IInputPageProps, IInputState> {
-
   constructor(props: IInputPageProps) {
     super(props)
     this.state = {
       loading: false
     }
-    this.createSignedTransaction = this.createSignedTransaction.bind(this)
+    this.approveContract = this.approveContract.bind(this)
+    this.attemptDataSet = this.attemptDataSet.bind(this)
     this.whitelistSet = this.whitelistSet.bind(this)
   }
 
-  async createEIP712Data(values: any) {
+  async createEIP712Data(vaultAddress: string, fee: string) {
     const newWeb3 = new web3((window as any).ethereum)
     const accounts = await newWeb3.eth.getAccounts();
 
@@ -73,12 +68,16 @@ export class InputPage extends Component<IInputPageProps, IInputState> {
       owner: accounts[0],
       from: accounts[0],
       sender: '0xFb50029AAD6C7AfE2fBD319596D9eC024c2Da8Bd',
-      token: values.token,
-      to: values.vaultAddress,
+      token: this.props.match.params.token,
+      to: vaultAddress,
       expiration: Math.floor(Date.now() / 1000) - 2592000,
       nonce: new BigNumber(`0x${crypto.randomBytes(32).toString('hex')}`).toString(10),
-      fee: values.fee
+      fee
     }
+    // set message to state for later
+    this.setState(() => ({
+      signedMessage: siphonPermissionData
+    }))
     const types = {
       EIP712Domain: [
         { name: 'name', type: 'string' },
@@ -115,148 +114,135 @@ export class InputPage extends Component<IInputPageProps, IInputState> {
       EIP712Data: data
     }
   }
+
   async signEIP712(web3: web3, data: any) {
     this.setState(() => ({
       loading: true
     }))
-    const { result } = await util.promisify((web3 as any).currentProvider.send)(data);
+    const res = await util.promisify((web3 as any).currentProvider.send)(data);
+    console.log('metamask res: ', res)
+    const result = res.result
     console.log('signResult', result)
-    await this.setState(() => ({
+    this.setState(() => ({
       signResult: result,
       loading: false
     }))
-    // clear the form so it makes sense to the user
-    this.props.form.resetFields()
-    if (this.state.whitelist) {
-      // if we already have the whitelist, start the watcher
-      this.sendDataToWatcher(this.state.whitelist, result)
-    }
+    // if (this.state.whitelist) {
+    // if we already have the whitelist, start the watcher
+    await this.sendDataToWatcher([], result)
+    // }
+    return // resolve the promise
   }
 
-  componentDidMount() {
-    // To disable submit button at the beginning.
-    this.props.form.validateFields();
-  }
 
-  createSignedTransaction(e: any) {
-    e.preventDefault();
-    this.props.form.validateFields(async (err, values: IFormValues) => {
-      if (!err) {
-        console.log('Received values of form: ', values);
-        console.log('this.props.bnClient: ', this.props.bnClient)
-        const { newWeb3, EIP712Data } = await this.createEIP712Data(values)
-        this.signEIP712(newWeb3, EIP712Data)
-      }
-    });
+  async approveContract() {
+    console.log(deployments)
+    let contract = new FlexContract(IERC20, { address: '0x51A82284E4a3b87Ce26473909D92B58C8Fca7852', provider: (window as any).ethereum })
+    const MAX_UINT256 = new BigNumber(2).pow(256).minus(1).toString(10);
+    await contract.approve('0x51A82284E4a3b87Ce26473909D92B58C8Fca7852', MAX_UINT256).send()
+    this.setState(() => ({
+      approveComplete: true
+    }))
+    console.log('contract', contract)
+
+    return
   }
-  whitelistSet(whitelist: string[]) {
+  async attemptDataSet(vaultAddress: string, fee: string) {
+    const { newWeb3, EIP712Data } = await this.createEIP712Data(vaultAddress, fee)
+    await this.signEIP712(newWeb3, EIP712Data)
+    return // resolve promise for form component visuals
+  }
+  async whitelistSet(whitelist: string[]) {
     console.log('whitelist from form: ', whitelist)
     this.setState(() => ({
       whitelist
     }))
     if (this.state.signResult) {
-      this.sendDataToWatcher(whitelist, this.state.signResult)
+      await this.sendDataToWatcher(whitelist, this.state.signResult)
+    }
+    return // resolve async
+  }
+
+  async sendDataToWatcher(whitelist: string[], signResult: string) {
+    console.log('sendDataToWatcher: ', whitelist, signResult)
+    const data = { whitelist, signResult, signedMessage: this.state.signedMessage }
+    try {
+      const res = await fetch(`${process.env.REACT_APP_NODE_APP_URL}/api/add-watcher/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+      const body = await res.json()
+      console.log('POST res body: ', body)
+      return body
+
+    } catch (e) {
+      console.error('error POSTing: ', e)
+      throw e // reject
     }
   }
-  sendDataToWatcher(whitelist: string[], signResult: string) {
-    console.log('sendDataToWatcxher: ', whitelist, signResult)
-  }
+
   render() {
-    const { getFieldDecorator, getFieldsError, getFieldError, isFieldTouched } = this.props.form;
-    // Only show error after a field is touched.
-    const usernameError = isFieldTouched('vaultAddress') && getFieldError('vaultAddress');
-    const feeError = isFieldTouched('fee') && getFieldError('fee');
-    const formItemLayoutWithOutLabel = {
-      wrapperCol: {
-        xs: { span: 24, offset: 0 },
-        sm: { span: 20, offset: 4 },
-      },
-    };
+    const cardTitle = (
+      <div style={{ display: 'flex' }}>
+        <Link to="/" >
+          <Icon type="left" style={{ fontSize: 24 }} />
+        </Link>
+        <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+          <h3 style={{ marginLeft: '2em' }} >new {this.props.match.params.token} watcher</h3>
+        </div>
+      </div>
+    )
     return (
       <>
-        <h2>InputPage</h2>
-        <Spin spinning={this.state.loading}>
-          <Card title="Create new watcher" bordered={false} style={{ width: '80%' }}>
-            <p>create a new watcher</p>
-            <Form onSubmit={this.createSignedTransaction}>
-              <Form.Item
-                {...formItemLayout}
-                validateStatus={usernameError ? 'error' : ''}
-                help={usernameError || ''}
-                label="Recovery Address"
-              >
-                {getFieldDecorator('vaultAddress', {
-                  initialValue: '0xFb50029AAD6C7AfE2fBD319596D9eC024c2Da8Bd',
-                  rules: [{ required: true, message: 'Please enter your vault address!' }],
-                })(
-                  <Input
-                    prefix={<Icon type="info-circle" style={{ color: 'rgba(0,0,0,.25)' }} />}
-                    placeholder="vault wallet address"
-                  />,
-                )}
-              </Form.Item>
-              <Form.Item
-                {...formItemLayout}
-                validateStatus={feeError ? 'error' : ''}
-                help={feeError || ''}
-                label="Fee you'll pay"
-              >
-                {getFieldDecorator('fee', {
-                  initialValue: 0.1,
-                  rules: [{ required: true, message: 'Please enter your vault address!' }],
-                })(
-                  <Input
-                    prefix={<Icon type="upload" style={{ color: 'rgba(0,0,0,.25)' }} />}
-                    placeholder="Enter the fee you're willing to pay."
-                  />,
-                )}
-              </Form.Item>
-              <Form.Item
-                {...formItemLayout}
-                label="Token to watch"
-              >
-                {getFieldDecorator('token', {
-                  initialValue: 'ETH',
-                  rules: [{ required: true, message: 'Please select a token!' }],
-                })(
-                  <Select
-                    placeholder="Select a token"
-                  >
-                    <Option value="ETH">ETH</Option>
-                    <Option value="TRX">TRX</Option>
-                    <Option value="WETH">WETH</Option>
-                  </Select>
-                )}
-              </Form.Item>
-              <Form.Item {...formItemLayoutWithOutLabel}>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  disabled={hasErrors(getFieldsError())}
-                  style={{ width: '100%' }}
+        <div style={{ display: 'flex', justifyContent: 'center' }} >
+          <Card
+            title={cardTitle}
+            bordered={false}
+            style={{ width: '80%', justifySelf: 'stretch' }}
+          >
+            <Timeline>
+              <Timeline.Item>Approve contract to send your recovery attempt</Timeline.Item>
+              <Timeline.Item>Create recovery attempt</Timeline.Item>
+              {/* <Timeline.Item>Watching for transactions</Timeline.Item> */}
+            </Timeline>
+            <Card title="1 - Approve Contract" style={{ marginBottom: '1em' }}>
+              {/* <div style={{ display: 'flex' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}> */}
+              <Form>
+
+                <Form.Item
+                  {...formItemLayoutWithOutLabel}
                 >
-                  Sign
-              </Button>
-              </Form.Item>
-              {this.state.signResult ? (
-                <>
-                  <Icon type="success" style={{ fontSize: 32, color: 'rgba(0,0,0,.25)' }} />
-                  <h3>Sign complete!</h3>
-                </>
-              ) : null}
-            </Form>
+                  <Button
+                    type="primary"
+                    disabled={this.state.approveComplete}
+                    style={{ width: '100%' }}
+                    onClick={this.approveContract}
+                  >
+                    Approve contract to send your recovery attempt
+                  </Button>
 
+                </Form.Item>
+              </Form>
+              {/* </div>
+              </div> */}
+            </Card>
+            <AttemptForm
+              attemptDataSet={this.attemptDataSet}
+            />
+            {this.state.signResult ? (
+              <WhitelistForm
+                whitelistSet={this.whitelistSet}
+              />
+            ) : null}
           </Card>
-        </Spin>
-        {this.state.signResult ? (
-          <WhitelistForm
-            whitelistSet={this.whitelistSet}
-          />
-        ) : null}
-
+        </div>
       </>
     );
   }
 }
-const WrappedInputPage = Form.create({ name: 'input_page' })(InputPage)
-export default WrappedInputPage;
+
+export default InputPage;
