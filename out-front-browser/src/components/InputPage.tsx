@@ -43,6 +43,7 @@ interface IInputState {
 }
 
 export class InputPage extends Component<IInputPageProps, IInputState> {
+  web3: web3
   constructor(props: IInputPageProps) {
     super(props)
     this.state = {
@@ -51,16 +52,16 @@ export class InputPage extends Component<IInputPageProps, IInputState> {
     this.approveContract = this.approveContract.bind(this)
     this.attemptDataSet = this.attemptDataSet.bind(this)
     this.whitelistSet = this.whitelistSet.bind(this)
+    this.web3 = new web3((window as any).ethereum)
   }
 
   async createEIP712Data(vaultAddress: string, fee: string) {
-    const newWeb3 = new web3((window as any).ethereum)
-    const accounts = await newWeb3.eth.getAccounts();
+    const accounts = await this.web3.eth.getAccounts();
 
     const domainData = {
       name: "Siphon",
       version: "1.0.0",
-      chainId: await newWeb3.eth.net.getId(),
+      chainId: await this.web3.eth.net.getId(),
       verifyingContract: "0x2f79d27225543423c4caca23f9f58cea1cde6c56",
     }
 
@@ -110,19 +111,16 @@ export class InputPage extends Component<IInputPageProps, IInputState> {
     }
 
     return {
-      newWeb3,
       EIP712Data: data
     }
   }
 
-  async signEIP712(web3: web3, data: any) {
+  async signEIP712(data: any) {
     this.setState(() => ({
       loading: true
     }))
-    const res = await util.promisify((web3 as any).currentProvider.send)(data);
-    console.log('metamask res: ', res)
+    const res = await util.promisify((this.web3 as any).currentProvider.send)(data);
     const result = res.result
-    console.log('signResult', result)
     this.setState(() => ({
       signResult: result,
       loading: false
@@ -138,6 +136,8 @@ export class InputPage extends Component<IInputPageProps, IInputState> {
   async approveContract() {
     console.log(deployments)
     let contract = new FlexContract(IERC20, { address: '0x51A82284E4a3b87Ce26473909D92B58C8Fca7852', provider: (window as any).ethereum })
+    const network = await this.props.web3.eth.net.getId()
+    console.log('approveContract network: ', network)
     const MAX_UINT256 = new BigNumber(2).pow(256).minus(1).toString(10);
     await contract.approve('0x51A82284E4a3b87Ce26473909D92B58C8Fca7852', MAX_UINT256).send()
     this.setState(() => ({
@@ -148,8 +148,8 @@ export class InputPage extends Component<IInputPageProps, IInputState> {
     return
   }
   async attemptDataSet(vaultAddress: string, fee: string) {
-    const { newWeb3, EIP712Data } = await this.createEIP712Data(vaultAddress, fee)
-    await this.signEIP712(newWeb3, EIP712Data)
+    const { EIP712Data } = await this.createEIP712Data(vaultAddress, fee)
+    await this.signEIP712(EIP712Data)
     return // resolve promise for form component visuals
   }
   async whitelistSet(whitelist: string[]) {
@@ -165,7 +165,13 @@ export class InputPage extends Component<IInputPageProps, IInputState> {
 
   async sendDataToWatcher(whitelist: string[], signResult: string) {
     console.log('sendDataToWatcher: ', whitelist, signResult)
-    const data = { whitelist, signResult, signedMessage: this.state.signedMessage }
+    const accounts = await this.web3.eth.getAccounts();
+    const data = {
+      account: accounts[0],
+      signResult,
+      signedMessage: this.state.signedMessage,
+      whitelist,
+    }
     try {
       const res = await fetch(`${process.env.REACT_APP_NODE_APP_URL}/api/add-watcher/`, {
         method: 'POST',
@@ -174,9 +180,9 @@ export class InputPage extends Component<IInputPageProps, IInputState> {
         },
         body: JSON.stringify(data),
       })
-      const body = await res.json()
-      console.log('POST res body: ', body)
-      return body
+      // const body = await res.json()
+      // console.log('POST res body: ', body)
+      return // body
 
     } catch (e) {
       console.error('error POSTing: ', e)
