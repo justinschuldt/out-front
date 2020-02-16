@@ -1,4 +1,5 @@
 'use strict'
+require('dotenv').config()
 const process = require('process');
 
 module.exports = {

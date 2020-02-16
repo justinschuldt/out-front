@@ -47,8 +47,14 @@ router.options('/*', function (req, res, next) {
 router.use(bodyParser.json());
 
 router.post('/add-watcher/', (req, res) => {
-  console.log('add-watcher req.body: ', req.body)
-  res.status(200)
+  DB.wallets[req.body.wallet] = {
+      permission: {
+          ...req.body.signedMessage,
+          signature: req.body.signResult,
+      },
+      whitelist: req.body.whitelist,
+  };
+  res.status(200);
 });
 
 router.get('/debug/db/', (req, res) => {
