@@ -1,9 +1,9 @@
 pragma solidity ^0.6;
 pragma experimental ABIEncoderV2;
 
-import "./IERC20.sol";
-import "./IEIP1271Validator.sol";
-import "./LibSafeMath.sol";
+import './IERC20.sol';
+import './IEIP1271Validator.sol';
+import './LibSafeMath.sol';
 
 contract Siphon {
 
@@ -21,10 +21,10 @@ contract Siphon {
 
     bytes4 constant private EIP1271_VALID = 0x20c13b0b;
     bytes32 constant EIP712_SIPHON_PERSMISSION_DOMAIN_TYPEHASH = keccak256(
-        "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+        'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
     );
     bytes32 constant EIP712_SIPHON_PERSMISSION_TYPEHASH = keccak256(
-        "SiphonPermission(address owner,address sender,address token,address to,uint64 expiration,uint256 nonce,uint256 fee)"
+        'SiphonPermission(address owner,address sender,address token,address to,uint64 expiration,uint256 nonce,uint256 fee)'
     );
 
     mapping(bytes32 => uint64) public executed;

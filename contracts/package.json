@@ -4,6 +4,7 @@
     "main": "index.js",
     "license": "Apache-2.0",
     "scripts": {
+        "clean": "rm -rf ./build/*.*",
         "build": "solc --evm-version istanbul --overwrite -o ./build --pretty-json --abi --bin --bin-runtime ./src/**.sol",
         "test": "mocha -t 10000 ./test/**.js",
         "migrate": "node ./lib/migrate.js"
@@ -13,10 +14,11 @@
         "chai": "^4.2.0",
         "chai-as-promised": "^7.1.1",
         "ethereumjs-util": "^6.2.0",
-        "flex-contract": "^2.0.3",
+        "flex-contract": "^2.1.0",
         "ganache-core": "^2.10.2",
         "lodash": "^4.17.15",
         "mocha": "^7.0.1",
-        "solc": "^0.6.2"
+        "solc": "^0.6.2",
+        "web3": "^1.2.6"
     }
 }
