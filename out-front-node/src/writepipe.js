@@ -1,59 +1,30 @@
-
-const net = require('net');
-require('dotenv').config()
+const fetch = require("node-fetch")
+const net = require('net')
 const express = require('express')
 const bodyParser = require('body-parser')
 const blocknativeSdk = require('bnc-sdk')
 const WebSocket = require('ws')
 const trash = process.argv.slice(2).toString()
 const chalk = require('chalk')
+const env = require('./env')
+const URL = 'http://0.0.0.0:5000/api/debug/db'
+let wallet
 let filter = false
-if (/filter/.test(trash)) {
-  filter = true
-}
 
-// Express
-const port = filter ? 5000 : 5001
+console.log(env)
 
-const app = express()
-const router = express.Router()
-
-// enable CORS
-router.use(function (req, res, next) {
-  res.header('Access-Control-Allow-Origin', '*')
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept'
-  )
-  next()
-})
-// options requests
-router.options('/*', function (req, res, next) {
-  res.header('Access-Control-Allow-Origin', '*')
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Content-Type, Authorization, Content-Length, X-Requested-With'
-  )
-  res.sendStatus(200)
-})
-router.use(bodyParser.json())
-
-
-router.post('/add-watcher/', (req, res) => {
-  console.log('add-watcher req.body: ', req.body)
-  res.status(200)
-})
-
-app.use('/api', router)
-
-app.listen(port, () => console.log(`express app listening on port ${port}!`))
-
-
-var stream = net.connect('/tmp/test6.sock');
-const main = () => {
-  const bnKey = process.env.BLOCKNATIVE_API_KEY
-  const bnUrl = process.env.BLOCKNATIVE_URL
+const stream = net.connect('/tmp/test6.sock');
+const main = async() => {
+  console.log('here')
+  let wallet = ""
+  await fetch(URL)
+    .then(res => res.json())
+    .then((json) => {
+     wallet = Object.keys(json.wallets)[0] 
+    })
+  const re = new RegExp(wallet)
+  const bnKey = env.bnKey
+  const bnUrl = env.bnUrl
   if (!bnKey) {
     throw new Error('blocknative key not provided as environment variable.')
   }
@@ -65,20 +36,18 @@ const main = () => {
       event.transaction.gasPrice &&
       event.transaction.hash
     ) {
-       line += `from: ${event.transaction.from.slice(0, 6)},\t`
-       line += `to: ${event.transaction.to.slice(0, 6)},\t`
+       line += `from: ${event.transaction.from.slice(0, 6)}...,\t`
+       line += `to: ${event.transaction.to.slice(0, 6)}...,\t`
        line += `gasPrice: ${event.transaction.gasPrice},\t`
-       line += `hash: ${event.transaction.hash.slice(0, 6)}`
-      if (/0xf2/i.test(line)) {
-        console.log(chalk.red(line))
-        stream.write(line);
-      } else if (/0x5f/i.test(line)) {
+       line += `hash: ${event.transaction.hash.slice(0, 6)}...`
+      if (re.test(line)) {
         console.log(chalk.green(line))
         stream.write(line);
+      } else if (/0x5f/i.test(line)) {
+        console.log(chalk.red(line))
+        stream.write(line);
       } else {
-        if (!filter) {
-          console.log(line)
-        }
+        console.log(line)
       }
     }
   }
