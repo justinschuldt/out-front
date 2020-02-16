@@ -1,7 +1,7 @@
 pragma solidity ^0.6;
 
-import "./IERC20.sol";
-import "./LibSafeMath.sol";
+import './IERC20.sol';
+import './LibSafeMath.sol';
 
 contract TronToken is IERC20 {
 
