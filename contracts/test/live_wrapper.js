@@ -10,6 +10,7 @@ const ganache = require('ganache-core');
 const _ = require('lodash');
 const path = require('path');
 const process = require('process');
+const abi = require('web3-eth-abi');
 const { promisify } = require('util');
 const DEPLOYMENTS = require('../deployments.json');
 const SECRETS = require('../../secrets.json');
@@ -26,7 +27,7 @@ const SIPHON = DEPLOYMENTS[NETWORK].Siphon;
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
-describe.only('Live call wrapper tests', () => {
+describe('Live call wrapper tests', () => {
     const token = new FlexContract(
         TOKEN_ABI,
         {
