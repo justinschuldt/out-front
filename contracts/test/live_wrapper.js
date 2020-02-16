@@ -20,8 +20,8 @@ const WRAPPER_BYTECODE = fs.readFileSync(path.resolve(__dirname, '../build/Token
 const TOKEN_ABI = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../build/TronToken.abi')));
 
 const NETWORK = 'ropsten';
-const OWNER = SECRETS.accounts.user.address;
 const VAULT = SECRETS.accounts.vault.address;
+const SIPHON = DEPLOYMENTS[NETWORK].Siphon;
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -49,10 +49,11 @@ describe.only('Live call wrapper tests', () => {
             ethjs.setLengthLeft(target, 32),
             ethjs.setLengthLeft(token, 32),
             ethjs.setLengthLeft(owner, 32),
+            ethjs.setLengthLeft(SIPHON, 32),
         ]));
     }
 
-    async function checkCall(target, token, owner, sender, callData) {
+    async function checkCall(target, token, owner, callData) {
         const newTargetAddress = ethjs.bufferToHex(crypto.randomBytes(20));
         const targetBytecode = await eth.getCode(target);
         const augmentedCallData = augmentCallData(
@@ -67,7 +68,6 @@ describe.only('Live call wrapper tests', () => {
             method: 'eth_call',
             params: [
                 {
-                    from: sender,
                     to: target,
                     gas: '0x7a120',
                     gasPrice: '0x3b9aca00',
@@ -84,15 +84,14 @@ describe.only('Live call wrapper tests', () => {
         return r.result;
     }
 
-    const ERROR_BYTES = Buffer.from('TokenBalanceCheckCallWrapper/FUNDS_REDUCED').toString('hex');
+    const ERROR_BYTES = Buffer.from('TokenBalanceCheckCallWrapper').toString('hex');
 
     it('reverts if a contract call changes token balance', async () => {
         const r = await checkCall(
             changer.address,
             token.address,
-            OWNER,
-            VAULT,
-            await changer.change(token.address, OWNER).encode(),
+            changer.address,
+            await changer.changeBalance(token.address, VAULT).encode(),
         );
         expect(r.includes(ERROR_BYTES)).to.be.true;
     });
@@ -101,21 +100,39 @@ describe.only('Live call wrapper tests', () => {
         const r = await checkCall(
             changer.address,
             token.address,
-            OWNER,
-            VAULT,
-            await changer.noChange(token.address, OWNER).encode(),
+            changer.address,
+            await changer.noChangeBalance(token.address, VAULT).encode(),
         );
         expect(r.includes(ERROR_BYTES)).to.be.false;
     });
 
-    it.skip('parallel benchmarks', async () => {
+    it('reverts if a contract call changes token allowance to siphon', async () => {
+        const r = await checkCall(
+            changer.address,
+            token.address,
+            changer.address,
+            await changer.changeAllowance(token.address, SIPHON).encode(),
+        );
+        expect(r.includes(ERROR_BYTES)).to.be.true;
+    });
+
+    it('does not revert if a contract call does not change token allowance to siphon', async () => {
+        const r = await checkCall(
+            changer.address,
+            token.address,
+            changer.address,
+            await changer.noChangeAllowance(token.address, SIPHON).encode(),
+        );
+        expect(r.includes(ERROR_BYTES)).to.be.false;
+    });
+
+    it('parallel benchmarks', async () => {
         await Promise.all(_.times(100, async () => {
             const r = await checkCall(
                 changer.address,
                 token.address,
-                OWNER,
-                VAULT,
-                await changer.change(token.address, OWNER).encode(),
+                changer.address,
+                await changer.changeBalance(token.address, VAULT).encode(),
             );
             expect(r.includes(ERROR_BYTES)).to.be.true;
         }));
