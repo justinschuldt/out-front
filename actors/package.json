@@ -1,0 +1,15 @@
+{
+    "name": "actors",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "Apache-2.0",
+    "private": true,
+    "scripts": {
+        "attack": "node ./src/attack-dapp.js"
+    },
+    "dependencies": {
+        "bignumber.js": "^9.0.0",
+        "dotenv": "^8.2.0",
+        "flex-contract": "^2.1.0"
+    }
+}

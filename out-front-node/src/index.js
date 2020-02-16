@@ -1,4 +1,3 @@
-require('dotenv').config()
 const express = require('express')
 const bodyParser = require('body-parser')
 const blocknativeSdk = require('bnc-sdk')

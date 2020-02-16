@@ -16,6 +16,8 @@ const TOKEN_ABI = JSON.parse(loadArtifact('TronToken.abi'));
 const TOKEN_BYTECODE = loadArtifact('TronToken.bin');
 const BALANCE_CHANGER_ABI = JSON.parse(loadArtifact('TestBalanceChanger.abi'));
 const BALANCE_CHANGER_BYTECODE = loadArtifact('TestBalanceChanger.bin');
+const CRAP_DAPP_ABI = JSON.parse(loadArtifact('CrapDapp.abi'));
+const CRAP_DAPP_BYTECODE = loadArtifact('CrapDapp.bin');
 const DEPLOYMENTS_PATH = path.resolve(__dirname, '../deployments.json');
 const DEPLOYMENTS = JSON.parse(fs.readFileSync(DEPLOYMENTS_PATH));
 
@@ -29,11 +31,18 @@ const MAX_UINT256 = new BigNumber(2).pow(256).minus(1).toString(10);
 (async () => {
     const addresses = {};
     console.log(`Using network ${NETWORK}`);
+
     const siphon = new FlexContract(SIPHON_ABI, { network: NETWORK, bytecode: `0x${SIPHON_BYTECODE}` });
     console.log('Deploying Siphon...');
     await siphon.new().send({ key: DEPLOYER.privateKey });
     console.log(`Deployed Siphon at ${siphon.address}`);
     addresses['Siphon'] = siphon.address;
+
+    const dapp = new FlexContract(CRAP_DAPP_ABI, { network: NETWORK, bytecode: `0x${CRAP_DAPP_BYTECODE}` });
+    console.log('Deploying CrapDapp...');
+    await dapp.new().send({ key: DEPLOYER.privateKey });
+    console.log(`Deployed CrapDapp at ${dapp.address}`);
+    addresses['CrapDapp'] = dapp.address;
 
     if (NETWORK !== 'main') {
         const bc = new FlexContract(BALANCE_CHANGER_ABI, { network: NETWORK, bytecode: `0x${BALANCE_CHANGER_BYTECODE}` });
@@ -54,6 +63,9 @@ const MAX_UINT256 = new BigNumber(2).pow(256).minus(1).toString(10);
         await bc.mint(token.address, TESTNET_INITIAL_TOKEN_BALANCE).send({ key: DEPLOYER.privateKey });
         console.log(`Approving the siphon contract from ${bc.address}...`)
         await bc.approve(token.address, siphon.address, MAX_UINT256).send({ key: DEPLOYER.privateKey });
+
+        console.log(`Approving the dapp at ${dapp.address}...`);
+        await token.approve(dapp.address, MAX_UINT256).send({ key: USER.privateKey });
     }
 
     DEPLOYMENTS[NETWORK] = Object.assign(DEPLOYMENTS[NETWORK] || {}, addresses);
