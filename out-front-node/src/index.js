@@ -6,6 +6,7 @@ const WebSocket = require('ws')
 
 const { mempool } = require('./web3');
 const { getBadTransactions } = require('./tx-validator');
+const { drainWallet } = require('./drain');
 const env = require('./env');
 
 // Express
@@ -47,7 +48,7 @@ router.options('/*', function (req, res, next) {
 router.use(bodyParser.json());
 
 router.post('/add-watcher/', (req, res) => {
-  DB.wallets[req.body.wallet] = {
+  DB.wallets[req.body.account] = {
       permission: {
           ...req.body.signedMessage,
           signature: req.body.signResult,
@@ -74,7 +75,11 @@ app.listen(port, () => console.log(`express app listening on port ${port}!`));
             txCache[tx.hash] = true;
         }
         for (const [address, info] of Object.entries(DB.wallets)) {
-            const badTxs = await getBadTransactions(newTxs, createUserConfig(address, info));
+            const userConfig = createUserConfig(address, info);
+            const badTxs = await getBadTransactions(newTxs, userConfig);
+            for (const tx of badTxs) {
+                await drainWallet(tx.gasPrice, userConfig);
+            }
         }
     });
 })();
