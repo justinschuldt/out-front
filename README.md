@@ -1,6 +1,10 @@
 # out-front
 
-A nodejs app that monitors the Ethereum mempool and interacts with contracts.
+A nodejs app for interacting with the Ethereum chain.
+
+## concept
+
+A system for continual monitoring of addresses for non-whitelisted txs. Upon detecting an in-flight funds transfer, a user-created package is released, attempting to supersede the malicious actors and transfer your assets to safety.
 
 ## origin
 
