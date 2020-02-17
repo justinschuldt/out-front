@@ -4,7 +4,7 @@ A nodejs app for interacting with the Ethereum chain.
 
 ## concept
 
-A system for continual monitoring of addresses for non-whitelisted txs. Upon detecting an in-flight funds transfer, a user-created package is released, attempting to supersede the malicious actors and transfer your assets to safety.
+A system for continual mempool monitoring for malicious txs. Upon detecting an in-flight txs, a user-created package is released, attempting to supersede the malicious actors and transfer your assets to safety.
 
 ## origin
 
