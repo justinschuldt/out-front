@@ -1,4 +1,4 @@
-# outfront
+# Outfront
 
 ### Team members:
 - Jaden McConkey : J2R5M3
