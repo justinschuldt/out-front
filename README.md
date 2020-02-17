@@ -1,10 +1,6 @@
 # out-front
 
-A nodejs app for interacting with the Ethereum chain.
-
-## concept
-
-A system for continual mempool monitoring for malicious txs. Upon detecting an in-flight txs, a user-created package is released, attempting to supersede the malicious actors and transfer your assets to safety.
+A service that monitors pending transactions for unauthorized transfers of ERC20 tokens from wallets and fires off a competing transaction at a higher gas price to divert funds into a rescue wallet. The system is non-custodial and uses a signed (EIP712) permission token to execute recovery
 
 ## origin
 
@@ -20,7 +16,7 @@ This was built during the [EthDenver](https://ethdenver.com) 2020 hackathon.
 
 The project is currently a working POC.
 
-Running the project requires API keys for [Blocknative](https://blocknative.com) and [Radarr](https://radar.tech).
+Running the project requires API keys for [Blocknative](https://blocknative.com) and/or [Radar Deploy](https://deploy.radar.tech). But it can be set up to use a personal geth node.
 
 ## goals
 
