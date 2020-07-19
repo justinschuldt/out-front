@@ -16,7 +16,7 @@
         "ethereumjs-util": "^6.2.0",
         "flex-contract": "^2.1.0",
         "ganache-core": "^2.10.2",
-        "lodash": "^4.17.15",
+        "lodash": "^4.17.19",
         "mocha": "^7.0.1",
         "solc": "^0.6.2",
         "web3": "^1.2.6"
