@@ -17,7 +17,7 @@
     "colors": "1.4.0",
     "dotenv": "8.2.0",
     "ethereumjs-util": "6.2.0",
-    "express": "4.17.1",
+    "express": "4.17.3",
     "flex-contract": "2.1.0",
     "node-fetch": "2.6.0",
     "web3": "1.2.6",
